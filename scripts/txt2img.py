@@ -110,11 +110,7 @@ if __name__ == "__main__":
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = model.to(device)
 
-    if opt.plms:
-        sampler = PLMSSampler(model)
-    else:
-        sampler = DDIMSampler(model)
-
+    sampler = PLMSSampler(model) if opt.plms else DDIMSampler(model)
     os.makedirs(opt.outdir, exist_ok=True)
     outpath = opt.outdir
 
@@ -125,13 +121,13 @@ if __name__ == "__main__":
     os.makedirs(sample_path, exist_ok=True)
     base_count = len(os.listdir(sample_path))
 
-    all_samples=list()
+    all_samples = []
     with torch.no_grad():
         with model.ema_scope():
             uc = None
             if opt.scale != 1.0:
                 uc = model.get_learned_conditioning(opt.n_samples * [""])
-            for n in trange(opt.n_iter, desc="Sampling"):
+            for _ in trange(opt.n_iter, desc="Sampling"):
                 c = model.get_learned_conditioning(opt.n_samples * [prompt])
                 shape = [4, opt.H//8, opt.W//8]
                 samples_ddim, _ = sampler.sample(S=opt.ddim_steps,
